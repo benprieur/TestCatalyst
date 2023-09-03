@@ -24,10 +24,10 @@ namespace TestCatalyst
             await ner(); 
 
             // Deuxième exemple - thèmes LDA
-            await testLDA(); 
+            //await testLDA(); 
         
             // Troisième exemple - détection des langues
-            await detectionLangues();
+            //await detectionLangues();
         }
 
         static async Task ner()
@@ -49,7 +49,7 @@ namespace TestCatalyst
             {
                 foreach (var word in sentence)
                 {
-                    Console.WriteLine(word.POS + "\t" + word.Value);
+                    Console.WriteLine(word.value + "\t" + word.POS);
                 }
             }
         }
