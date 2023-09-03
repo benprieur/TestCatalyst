@@ -21,7 +21,7 @@ namespace TestCatalyst
         static async Task Main(string[] args)
         {
             // Premier exemple - infos grammaire
-            await tokenization(); 
+            await ner(); 
 
             // Deuxième exemple - thèmes LDA
             await testLDA(); 
@@ -30,10 +30,10 @@ namespace TestCatalyst
             await detectionLangues();
         }
 
-        static async Task tokenization()
+        static async Task ner()
         {
             Console.WriteLine(" ");
-            Console.WriteLine("--- TOKENIZATION ---");
+            Console.WriteLine("--- NER ---");
             Console.WriteLine(" ");
 
             Catalyst.Models.French.Register();
