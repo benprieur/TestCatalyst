@@ -49,7 +49,7 @@ namespace TestCatalyst
             {
                 foreach (var word in sentence)
                 {
-                    Console.WriteLine(word.value + "\t" + word.POS);
+                    Console.WriteLine(word.Value + "\t" + word.POS);
                 }
             }
         }
