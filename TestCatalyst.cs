@@ -1,14 +1,18 @@
 using Catalyst;
-using Mosaik.Core;
-using System;
-using System.Threading.Tasks;
-
-using System.Linq;
-using System.Text;
 using Catalyst.Models;
 
-using System.Collections.Generic;
+using Mosaik.Core;
 using Version = Mosaik.Core.Version;
+
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using Microsoft.Extensions.Logging;
+//using Microsoft.Extensions.Logging.Console;
+
 
 namespace TestCatalyst
 {
@@ -17,10 +21,10 @@ namespace TestCatalyst
         static async Task Main(string[] args)
         {
             // Premier exemple - infos grammaire
-            //await tokenization(); 
+            await tokenization(); 
 
             // Deuxième exemple - thèmes LDA
-            //await testLDA(); 
+            await testLDA(); 
         
             // Troisième exemple - détection des langues
             await detectionLangues();
@@ -28,12 +32,17 @@ namespace TestCatalyst
 
         static async Task tokenization()
         {
-            Storage.Current = new OnlineRepositoryStorage(new DiskStorage("catalyst-models-french"));
-            var nlp = await Pipeline.ForAsync(Language.French);
+            Console.WriteLine(" ");
+            Console.WriteLine("--- TOKENIZATION ---");
+            Console.WriteLine(" ");
+
+            Catalyst.Models.French.Register();
+            Console.OutputEncoding = Encoding.UTF8;
  
+            var nlp = await Pipeline.ForAsync(Language.French);
+
             string sentences = "Nous eûmes le bouquet de la foire ; ces messieurs étaient contents de leur voyage, et tout fut réglé dans deux jours. Et en route pour Coulommiers, où nous arrivâmes sans accidents.";
             var doc = new Document(sentences, Language.French);
-            //Console.WriteLine(doc.ToJson());
             
             nlp.ProcessSingle(doc);            
             foreach (var sentence in doc)
@@ -47,12 +56,16 @@ namespace TestCatalyst
 
         static async Task testLDA()
         {
+            Console.WriteLine(" ");
+            Console.WriteLine("--- LDA ---");
+            Console.WriteLine(" ");
+
             Console.OutputEncoding = Encoding.UTF8;
 
-            Storage.Current = new OnlineRepositoryStorage(new DiskStorage("catalyst-models"));
+            Catalyst.Models.English.Register();
+            Storage.Current = new DiskStorage("catalyst-models");
 
             var (train, test) = await Corpus.Reuters.GetAsync();
-
             var nlp = Pipeline.For(Language.English);
 
             var trainDocs = nlp.Process(train).ToArray();
@@ -101,6 +114,7 @@ namespace TestCatalyst
                         }
                     }
                 }
+
             foreach(KeyValuePair<LDA.LDATopicDescription, int> element in themes)
             {
                 Console.WriteLine("THEME => " + element.Key.ToString() + " " + element.Value.ToString() + " documents");
@@ -109,19 +123,19 @@ namespace TestCatalyst
 
         static async Task detectionLangues()        
         {
+            Console.WriteLine(" ");
+            Console.WriteLine("--- LANGUAGE DETECTION ---");
+            Console.WriteLine(" ");
+
             Console.OutputEncoding = Encoding.UTF8;
 
-            Storage.Current = new OnlineRepositoryStorage(new DiskStorage("catalyst-models"));
-
             var cld2LanguageDetector     = await LanguageDetector.FromStoreAsync(Language.Any, Version.Latest, "");
-            //var fastTextLanguageDetector = await FastTextLanguageDetector.FromStoreAsync(Language.Any, Version.Latest, "");
 
             foreach (var (lang, text) in Data.PhrasesLanguesInconnues)
             {
                 var doc2 = new Document(text);
                 cld2LanguageDetector.Process(doc2);
 
-                //Console.WriteLine(text);
                 Console.WriteLine(lang + " (à deviner) : " + doc2.Language);           
             }
    
