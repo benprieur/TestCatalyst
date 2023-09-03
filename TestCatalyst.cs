@@ -21,11 +21,11 @@ namespace TestCatalyst
         static async Task Main(string[] args)
         {
             // Premier exemple - infos grammaire
-            await ner(); 
+            //await ner();
 
             // Deuxième exemple - thèmes LDA
-            //await testLDA(); 
-        
+            await testLDA(); 
+
             // Troisième exemple - détection des langues
             //await detectionLangues();
         }
@@ -38,13 +38,13 @@ namespace TestCatalyst
 
             Catalyst.Models.French.Register();
             Console.OutputEncoding = Encoding.UTF8;
- 
+
             var nlp = await Pipeline.ForAsync(Language.French);
 
             string sentences = "Nous eûmes le bouquet de la foire ; ces messieurs étaient contents de leur voyage, et tout fut réglé dans deux jours. Et en route pour Coulommiers, où nous arrivâmes sans accidents.";
             var doc = new Document(sentences, Language.French);
-            
-            nlp.ProcessSingle(doc);            
+
+            nlp.ProcessSingle(doc);
             foreach (var sentence in doc)
             {
                 foreach (var word in sentence)
@@ -61,32 +61,31 @@ namespace TestCatalyst
             Console.WriteLine(" ");
 
             Console.OutputEncoding = Encoding.UTF8;
-
             Catalyst.Models.English.Register();
             Storage.Current = new DiskStorage("catalyst-models");
+            var nlp = Pipeline.For(Language.English);
 
             var (train, test) = await Corpus.Reuters.GetAsync();
-            var nlp = Pipeline.For(Language.English);
 
             var trainDocs = nlp.Process(train).ToArray();
             var testDocs = nlp.Process(test).ToArray();
 
             using (var lda = new LDA(Language.English, 0, "reuters-lda-programmez"))
             {
-                lda.Data.NumberOfTopics = 5; 
+                lda.Data.NumberOfTopics = 4;
                 lda.Train(trainDocs, Environment.ProcessorCount);
                 await lda.StoreAsync();
             }
-            
+
             Dictionary<LDA.LDATopicDescription, int> themes = new Dictionary<LDA.LDATopicDescription, int>();
             using (var lda = await LDA.FromStoreAsync(Language.English, 0, "reuters-lda-programmez"))
             {
                 foreach (var doc in testDocs)
                 {
                     if (lda.TryPredict(doc, out var topics))
-                    { 
+                    {
                         int topScoreId = -1;
-                        float topScore = 0;    
+                        float topScore = 0;
                         foreach (var element in topics)
                         {
                             int id = element.TopicID;
@@ -100,28 +99,28 @@ namespace TestCatalyst
                         LDA.LDATopicDescription desc;
                         bool found = false;
                         lda.TryDescribeTopic(topScoreId, out desc);
-                        foreach(KeyValuePair<LDA.LDATopicDescription, int> element in themes)
+                        foreach (KeyValuePair<LDA.LDATopicDescription, int> element in themes)
                         {
                             if (element.Key.TopicID == topScoreId)
                             {
-                                themes[element.Key] = (int)element.Value + 1 ;
+                                themes[element.Key] = (int)element.Value + 1;
                                 found = true;
                                 break;
                             }
                         }
                         if (found == false)
                             themes.Add(desc, 1);
-                        }
                     }
                 }
+            }
 
-            foreach(KeyValuePair<LDA.LDATopicDescription, int> element in themes)
+            foreach (KeyValuePair<LDA.LDATopicDescription, int> element in themes)
             {
-                Console.WriteLine("THEME => " + element.Key.ToString() + " " + element.Value.ToString() + " documents");
-            }        
-        }   
+                Console.WriteLine("Thématique : " + element.Key.ToString() + " " + element.Value.ToString() + " documents");
+            }
+        }
 
-        static async Task detectionLangues()        
+        static async Task detectionLangues()
         {
             Console.WriteLine(" ");
             Console.WriteLine("--- LANGUAGE DETECTION ---");
@@ -129,22 +128,22 @@ namespace TestCatalyst
 
             Console.OutputEncoding = Encoding.UTF8;
 
-            var cld2LanguageDetector     = await LanguageDetector.FromStoreAsync(Language.Any, Version.Latest, "");
+            var cld2LanguageDetector = await LanguageDetector.FromStoreAsync(Language.Any, Version.Latest, "");
 
             foreach (var (lang, text) in Data.PhrasesLanguesInconnues)
             {
                 var doc2 = new Document(text);
                 cld2LanguageDetector.Process(doc2);
 
-                Console.WriteLine(lang + " (à deviner) : " + doc2.Language);           
+                Console.WriteLine(lang + " (à deviner) : " + doc2.Language);
             }
-   
+
         }
     }
 
     public static class Data
     {
-     
+
         public static Dictionary<Language, string> PhrasesLanguesInconnues = new Dictionary<Language, string>()
         {
             [Language.English] = "The quick brown fox jumps over the lazy dog.",
@@ -178,5 +177,5 @@ namespace TestCatalyst
             [Language.Yoruba] = "Ìwò̩fà ń yò̩ séji tó gbojúmó̩, ó hàn pákànpò̩ gan-an nis̩é̩ rè̩ bó dò̩la.",
             [Language.Welsh] = "Parciais fy jac codi baw hud llawn dŵr ger tŷ Mabon.",
         };
-    }    
+    }
 }
